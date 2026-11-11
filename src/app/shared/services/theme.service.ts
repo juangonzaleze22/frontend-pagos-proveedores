@@ -1,7 +1,8 @@
 import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
-const STORAGE_KEY = 'vencedora-theme';
+const STORAGE_KEY = 'app-theme';
+const LEGACY_STORAGE_KEY = 'vencedora-theme';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
@@ -12,7 +13,9 @@ export class ThemeService {
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
-      const saved = localStorage.getItem(STORAGE_KEY) as 'dark' | 'light' | null;
+      const saved =
+        (localStorage.getItem(STORAGE_KEY) as 'dark' | 'light' | null) ??
+        (localStorage.getItem(LEGACY_STORAGE_KEY) as 'dark' | 'light' | null);
       const prefersDark = saved === 'dark' || (saved === null && window.matchMedia?.('(prefers-color-scheme: dark)').matches);
       this.apply(prefersDark);
       this.isDark.set(prefersDark);

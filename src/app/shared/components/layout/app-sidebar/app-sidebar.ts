@@ -2,6 +2,8 @@ import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthContext } from '../../../../contexts/auth.context';
+import { BrandingService } from '../../../services/branding.service';
+import { environment } from '../../../../../environments/environment';
 import { ButtonModule } from 'primeng/button';
 
 export interface MenuItem {
@@ -20,8 +22,8 @@ export interface MenuItem {
 })
 export class AppSidebar {
   sidebarVisible = signal<boolean>(false);
-  
-  menuItems: MenuItem[] = [
+
+  private readonly baseMenuItems: MenuItem[] = [
     { label: 'Dashboard', icon: 'pi pi-th-large', route: '/dashboard' },
     { label: 'Proveedores', icon: 'pi pi-users', route: '/providers/locate' },
     { label: 'Pagos', icon: 'pi pi-wallet', route: '/payments/register' },
@@ -29,8 +31,11 @@ export class AppSidebar {
     { label: 'Cierre de Caja', icon: 'pi pi-calculator', route: '/cashier-close' }
   ];
 
+  menuItems: MenuItem[] = [];
+
   constructor(
     public authContext: AuthContext,
+    public branding: BrandingService,
     private router: Router
   ) {
     this.updateActiveRoute();
@@ -41,9 +46,17 @@ export class AppSidebar {
     });
   }
 
+  private canManageBranding(): boolean {
+    return environment.showBrandingModule && this.authContext.hasRole('ADMINISTRADOR');
+  }
+
   private updateActiveRoute() {
     const currentRoute = this.router.url;
-    this.menuItems = this.menuItems.map(item => ({
+    const items = this.canManageBranding()
+      ? [...this.baseMenuItems, { label: 'Apariencia', icon: 'pi pi-palette', route: '/settings/branding' }]
+      : [...this.baseMenuItems];
+
+    this.menuItems = items.map(item => ({
       ...item,
       active: currentRoute.startsWith(item.route)
     }));

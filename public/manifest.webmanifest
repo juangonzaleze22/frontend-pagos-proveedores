@@ -1,6 +1,6 @@
 {
-  "name": "Vencedora Pagos Proveedores",
-  "short_name": "Vencedora",
+  "name": "Gestión de Pagos a Proveedores",
+  "short_name": "Pagos",
   "description": "Aplicación de pagos a proveedores",
   "start_url": "/",
   "display": "standalone",

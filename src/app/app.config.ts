@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, inject, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -7,7 +7,8 @@ import { providePrimeNG } from 'primeng/config';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
-import { VencedoraPreset } from './theme/vencedora-preset';
+import { BrandPreset } from './theme/brand-preset';
+import { BrandingService } from './shared/services/branding.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -16,9 +17,10 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimations(),
     MessageService,
+    provideAppInitializer(() => inject(BrandingService).init()),
     providePrimeNG({
       theme: {
-        preset: VencedoraPreset,
+        preset: BrandPreset,
         options: {
           prefix: 'p',
           darkModeSelector: '.dark',

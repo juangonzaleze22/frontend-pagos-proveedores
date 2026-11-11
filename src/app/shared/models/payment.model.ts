@@ -1,3 +1,14 @@
+export interface PaymentDestinationAccount {
+  id?: number;
+  type: 'PAGO_MOVIL' | 'ZELLE' | 'TRANSFER';
+  bank?: string | null;
+  accountNumber?: string | null;
+  holderName?: string | null;
+  holderId?: string | null;
+  email?: string | null;
+  phone?: string | null;
+}
+
 export interface Payment {
   id: number;
   debtId: number;
@@ -53,6 +64,8 @@ export interface Payment {
   surplusAmount?: number;
   /** Nota u observación del pago */
   nota?: string;
+  /** Cuenta del proveedor a la que se realizó el pago (snapshot). */
+  destinationAccount?: PaymentDestinationAccount | null;
 }
 
 export interface PaymentVerification {

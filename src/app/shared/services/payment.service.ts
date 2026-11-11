@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
-import { Observable, map, catchError, throwError, of } from 'rxjs';
+import { Observable, from, map, catchError, throwError, of, switchMap } from 'rxjs';
 import { ApiService } from './api.service';
 import { Payment, PaymentVerification, mapPaymentMethodFromAPI, mapPaymentMethodToAPI } from '../models/payment.model';
 import { CashierPaymentsParams, CashierPaymentsResponse, CashierSessionSummary } from '../models/cashier.model';
 import { ApiResponse, PaginatedResponse } from '../models/api-response.model';
 import { parseLocalDate, parseLocalDateOptional, formatLocalDate, toLocalDateTimeAsUTCISOString } from '../utils/date.utils';
+import { optimizeImageFile, optimizeImageFiles } from '../utils/image.utils';
 
 export interface CreatePaymentData {
   debtId: number;
@@ -28,6 +29,8 @@ export interface CreatePaymentData {
   surplusAction?: 'CREDIT' | 'APPLY_TO_DEBT';
   surplusTargetDebtId?: number;
   nota?: string;
+  /** Cuenta del proveedor usada para el pago (opcional). */
+  destinationAccountId?: number | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -38,6 +41,23 @@ export class PaymentService {
    * Crea un nuevo pago (con FormData para archivos)
    */
   create(data: CreatePaymentData): Observable<Payment> {
+    return from(this.prepareReceiptImages(data)).pipe(
+      switchMap((prepared) => this.buildCreateRequest(prepared))
+    );
+  }
+
+  private async prepareReceiptImages(data: CreatePaymentData): Promise<CreatePaymentData> {
+    const receiptFiles = data.receiptFiles?.length
+      ? await optimizeImageFiles(data.receiptFiles)
+      : data.receiptFiles;
+    const receipt = data.receipt instanceof File
+      ? await optimizeImageFile(data.receipt)
+      : data.receipt;
+
+    return { ...data, receiptFiles, receipt };
+  }
+
+  private buildCreateRequest(data: CreatePaymentData): Observable<Payment> {
     const formData = new FormData();
     
     // Asegurar que paymentDate sea un objeto Date válido
@@ -74,6 +94,10 @@ export class PaymentService {
     // Nota opcional del pago
     if (data.nota != null && data.nota !== '') {
       formData.append('nota', String(data.nota).trim());
+    }
+
+    if (data.destinationAccountId != null) {
+      formData.append('destinationAccountId', data.destinationAccountId.toString());
     }
     
     // Si está en bolívares, agregar tasa y monto en bolívares
@@ -254,6 +278,12 @@ export class PaymentService {
    * Actualiza un pago existente (con FormData para archivos)
    */
   update(id: number, data: CreatePaymentData): Observable<Payment> {
+    return from(this.prepareReceiptImages(data)).pipe(
+      switchMap((prepared) => this.buildUpdateRequest(id, prepared))
+    );
+  }
+
+  private buildUpdateRequest(id: number, data: CreatePaymentData): Observable<Payment> {
     const formData = new FormData();
     
     // Asegurar que paymentDate sea un objeto Date válido
@@ -283,6 +313,10 @@ formData.append('confirmationNumber', data.confirmationNumber);
 
     if (data.nota != null && data.nota !== '') {
       formData.append('nota', String(data.nota).trim());
+    }
+
+    if (data.destinationAccountId != null) {
+      formData.append('destinationAccountId', data.destinationAccountId.toString());
     }
     
     if (data.isBolivares) {
@@ -533,7 +567,8 @@ formData.append('confirmationNumber', data.confirmationNumber);
       exchangeRate: apiPayment.exchangeRate,
       amountInBolivares: apiPayment.amountInBolivares,
       surplusAmount: apiPayment.surplusAmount || 0,
-      nota: apiPayment.nota
+      nota: apiPayment.nota,
+      destinationAccount: apiPayment.destinationAccount ?? null
     };
   }
 }

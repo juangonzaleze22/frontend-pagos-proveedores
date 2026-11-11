@@ -12,6 +12,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { MessageService } from 'primeng/api';
 import { AuthService } from '../shared/services/auth.service';
+import { BrandingService } from '../shared/services/branding.service';
 
 /**
  * Convierte errores técnicos de login en mensajes amigables para el usuario.
@@ -62,6 +63,7 @@ export class Login {
   loginForm: FormGroup;
   isLoading = signal(false);
   private authService = inject(AuthService);
+  public branding = inject(BrandingService);
 
   constructor(
     private fb: FormBuilder,

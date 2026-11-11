@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, from, map, switchMap } from 'rxjs';
 import { ApiService } from './api.service';
 import { ProviderOrder, OrderDetail } from '../models/provider.model';
 import { ApiResponse, PaginatedResponse } from '../models/api-response.model';
 import { parseLocalDate } from '../utils/date.utils';
+import { optimizeImageFiles } from '../utils/image.utils';
 
 export interface CreateOrderData {
   supplierId: number;
@@ -13,6 +14,12 @@ export interface CreateOrderData {
   creditDays: number;
   /** Saldo excedente (créditos) a aplicar a esta deuda. Opcional, ≥ 0, ≤ amount y ≤ saldo disponible del proveedor */
   surplusAmountToApply?: number;
+  /** Facturas nuevas a adjuntar (máx. 2). */
+  invoiceFiles?: File[];
+  /** URLs de facturas existentes que se conservan (modo edición). */
+  existingInvoiceFiles?: string[];
+  /** Eliminar todas las facturas del pedido. */
+  removeInvoice?: boolean;
 }
 
 export interface UpdateOrderData {
@@ -22,6 +29,12 @@ export interface UpdateOrderData {
   amount: number;
   /** Nuevo total de excedente a aplicar a la deuda (≥ 0, ≤ amount; incrementos ≤ saldo disponible del proveedor) */
   surplusAmountToApply?: number;
+  /** Facturas nuevas a adjuntar (máx. 2). */
+  invoiceFiles?: File[];
+  /** URLs de facturas existentes que se conservan. */
+  existingInvoiceFiles?: string[];
+  /** Eliminar todas las facturas del pedido. */
+  removeInvoice?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -32,20 +45,39 @@ export class OrderService {
    * Crea un nuevo pedido
    */
   create(data: CreateOrderData): Observable<ProviderOrder> {
-    const payload: Record<string, unknown> = {
-      supplierId: data.supplierId,
-      amount: data.amount,
-      dispatchDate: data.dispatchDate.toISOString().split('T')[0], // YYYY-MM-DD
-      creditDays: data.creditDays
-    };
+    return from(this.prepareInvoiceImages(data)).pipe(
+      switchMap((prepared) => this.buildCreateRequest(prepared))
+    );
+  }
+
+  private async prepareInvoiceImages<T extends { invoiceFiles?: File[] }>(data: T): Promise<T> {
+    const invoiceFiles = data.invoiceFiles?.length
+      ? await optimizeImageFiles(data.invoiceFiles)
+      : data.invoiceFiles;
+    return { ...data, invoiceFiles };
+  }
+
+  private buildCreateRequest(data: CreateOrderData): Observable<ProviderOrder> {
+    const formData = new FormData();
+    formData.append('supplierId', data.supplierId.toString());
+    formData.append('amount', data.amount.toString());
+    formData.append('dispatchDate', data.dispatchDate.toISOString().split('T')[0]); // YYYY-MM-DD
+    formData.append('creditDays', data.creditDays.toString());
+
     if (data.title != null && data.title !== '') {
-      payload['title'] = data.title;
+      formData.append('title', data.title);
     }
     if (data.surplusAmountToApply != null && data.surplusAmountToApply > 0) {
-      payload['surplusAmountToApply'] = data.surplusAmountToApply;
+      formData.append('surplusAmountToApply', data.surplusAmountToApply.toString());
     }
 
-    return this.apiService.post<ProviderOrder>('/orders', payload).pipe(
+    (data.invoiceFiles || []).slice(0, 2).forEach((file) => {
+      if (file instanceof File) {
+        formData.append('invoiceFiles', file, file.name);
+      }
+    });
+
+    return this.apiService.postFormData<ProviderOrder>('/orders', formData).pipe(
       map(response => {
         if (response.success && response.data) {
           return this.mapOrderFromAPI(response.data);
@@ -80,17 +112,37 @@ export class OrderService {
    * Actualiza un pedido existente (PUT /api/orders/:id)
    */
   update(id: number, data: UpdateOrderData): Observable<ProviderOrder> {
-    const payload: Record<string, unknown> = {
-      dispatchDate: data.dispatchDate.toISOString().split('T')[0],
-      creditDays: data.creditDays,
-      amount: data.amount,
-      title: data.title ?? ''
-    };
+    return from(this.prepareInvoiceImages(data)).pipe(
+      switchMap((prepared) => this.buildUpdateRequest(id, prepared))
+    );
+  }
+
+  private buildUpdateRequest(id: number, data: UpdateOrderData): Observable<ProviderOrder> {
+    const formData = new FormData();
+    formData.append('dispatchDate', data.dispatchDate.toISOString().split('T')[0]);
+    formData.append('creditDays', data.creditDays.toString());
+    formData.append('amount', data.amount.toString());
+    formData.append('title', data.title ?? '');
+
     if (data.surplusAmountToApply !== undefined) {
-      payload['surplusAmountToApply'] = data.surplusAmountToApply;
+      formData.append('surplusAmountToApply', data.surplusAmountToApply.toString());
     }
 
-    return this.apiService.put<ProviderOrder>(`/orders/${id}`, payload).pipe(
+    if (data.removeInvoice) {
+      formData.append('removeInvoice', 'true');
+    }
+
+    (data.existingInvoiceFiles || []).forEach((url) => {
+      formData.append('existingInvoiceFiles', url);
+    });
+
+    (data.invoiceFiles || []).slice(0, 2).forEach((file) => {
+      if (file instanceof File) {
+        formData.append('invoiceFiles', file, file.name);
+      }
+    });
+
+    return this.apiService.putFormData<ProviderOrder>(`/orders/${id}`, formData).pipe(
       map(response => {
         if (response.success && response.data) {
           return this.mapOrderFromAPI(response.data);
@@ -140,6 +192,7 @@ export class OrderService {
       dispatchDate: parseLocalDate(apiOrder.dispatchDate),
       creditDays: apiOrder.creditDays,
       dueDate: parseLocalDate(apiOrder.dueDate),
+      invoiceFiles: apiOrder.invoiceFiles ?? [],
       createdAt: apiOrder.createdAt ? new Date(apiOrder.createdAt) : undefined
     };
   }
@@ -157,6 +210,7 @@ export class OrderService {
       dispatchDate: parseLocalDate(apiOrder.dispatchDate),
       creditDays: apiOrder.creditDays,
       dueDate: parseLocalDate(apiOrder.dueDate),
+      invoiceFiles: apiOrder.invoiceFiles ?? [],
       debt: apiOrder.debt,
       createdBy: apiOrder.createdBy,
       createdAt: apiOrder.createdAt ? new Date(apiOrder.createdAt) : undefined,

@@ -3,7 +3,7 @@
   <!-- Logo -->
   <div class="flex items-center justify-center h-20 border-b border-gray-200 dark:border-gray-700 cursor-pointer" routerLink="/dashboard">
     <span class="text-white font-bold text-xl tracking-wide flex items-center gap-2">
-      <img src="images/logo.png" alt="Logo" class="w-54 h-10 dark:brightness-0 dark:invert">
+      <img [src]="branding.logoUrl()" [alt]="branding.companyName()" class="w-54 h-10 dark:brightness-0 dark:invert">
     </span>
   </div>
 
@@ -76,7 +76,7 @@
     <!-- Header con logo y botón cerrar -->
     <div class="flex items-center justify-between h-20 border-b border-gray-200 dark:border-gray-700 px-4">
       <div class="flex items-center justify-center cursor-pointer" routerLink="/dashboard" (click)="closeSidebar()">
-        <img src="images/logo.png" alt="Logo" class="w-54 h-10 dark:brightness-0 dark:invert">
+        <img [src]="branding.logoUrl()" [alt]="branding.companyName()" class="w-54 h-10 dark:brightness-0 dark:invert">
       </div>
       <button 
         (click)="closeSidebar()"

@@ -9,8 +9,23 @@
 /* Estilos base de PrimeNG v20 - se cargan automáticamente con los componentes */
 /* Los estilos se inyectan dinámicamente cuando se usan los componentes a través de providePrimeNG */
 
-/* Sincronización de colores PrimeNG con Tailwind */
+/* Sincronización de colores PrimeNG con Tailwind.
+   Los valores --brand-* (tripletas RGB) y --p-primary-* (hex) se sobrescriben
+   en runtime desde BrandingService según la marca configurada. */
 :root {
+  --brand-50: 239 246 255;
+  --brand-100: 219 234 254;
+  --brand-200: 191 219 254;
+  --brand-300: 147 197 253;
+  --brand-400: 96 165 250;
+  --brand-500: 59 130 246;
+  --brand-600: 37 99 235;
+  --brand-700: 29 78 216;
+  --brand-800: 30 64 175;
+  --brand-900: 30 58 138;
+  --brand-950: 23 37 84;
+  --brand-accent: #2563eb;
+
   --p-primary-color: #3b82f6;
   --p-primary-color-text: #ffffff;
   --p-primary-50: #eff6ff;
@@ -23,11 +38,55 @@
   --p-primary-700: #1d4ed8;
   --p-primary-800: #1e40af;
   --p-primary-900: #1e3a8a;
+  --p-primary-950: #172554;
 }
 
 /* Estilos globales */
 body {
   font-family: 'Inter', sans-serif;
+}
+
+/* Placeholders neutros (evita colores heredados de marca/validación). */
+.p-inputtext::placeholder,
+.p-password-input::placeholder,
+.p-textarea::placeholder {
+  color: #94a3b8 !important; /* slate-400 */
+  opacity: 1;
+}
+
+.dark .p-inputtext::placeholder,
+.dark .p-password-input::placeholder,
+.dark .p-textarea::placeholder {
+  color: #a1a1aa !important; /* zinc-400 */
+}
+
+/* Icono de mostrar/ocultar del password en tono neutro. */
+.p-password-toggle-mask-icon {
+  color: #94a3b8 !important;
+}
+
+.dark .p-password-toggle-mask-icon {
+  color: #a1a1aa !important;
+}
+
+/* Autofill del navegador: evita el fondo amarillo/naranja. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #0f172a !important;
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-text-fill-color: #f8fafc !important;
+  -webkit-box-shadow: 0 0 0 1000px #27272a inset !important;
+  box-shadow: 0 0 0 1000px #27272a inset !important;
 }
 
 /* Clase para login con Manrope */

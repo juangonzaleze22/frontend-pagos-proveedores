@@ -95,6 +95,119 @@
             </div>
           </div>
 
+          <!-- Métodos de Pago -->
+          <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-1">Métodos de Pago</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Guarde los datos de las cuentas del distribuidor. Se mostrarán al registrar un pago y en el detalle del mismo.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <!-- Pago Móvil -->
+              <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" formControlName="pagoMovilEnabled" class="w-4 h-4 accent-primary" />
+                  <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                    <i class="pi pi-mobile mr-1 text-primary"></i> Pago Móvil
+                  </span>
+                </label>
+                @if (providerForm.get('pagoMovilEnabled')?.value) {
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Banco</label>
+                    <input type="text" pInputText formControlName="pagoMovilBanco" placeholder="Ej. Banesco" class="w-full" />
+                    @if (providerForm.get('pagoMovilBanco')?.invalid && providerForm.get('pagoMovilBanco')?.touched) {
+                      <small class="text-red-600">Requerido</small>
+                    }
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Teléfono</label>
+                    <input type="tel" pInputText formControlName="pagoMovilTelefono" placeholder="Ej. 04141234567" class="w-full" />
+                    @if (providerForm.get('pagoMovilTelefono')?.invalid && providerForm.get('pagoMovilTelefono')?.touched) {
+                      <small class="text-red-600">Requerido</small>
+                    }
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Cédula / RIF</label>
+                    <input type="text" pInputText formControlName="pagoMovilCedula" placeholder="Ej. V-12345678" class="w-full" />
+                    @if (providerForm.get('pagoMovilCedula')?.invalid && providerForm.get('pagoMovilCedula')?.touched) {
+                      <small class="text-red-600">Requerido</small>
+                    }
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Titular</label>
+                    <input type="text" pInputText formControlName="pagoMovilTitular" placeholder="Nombre del titular" class="w-full" />
+                    @if (providerForm.get('pagoMovilTitular')?.invalid && providerForm.get('pagoMovilTitular')?.touched) {
+                      <small class="text-red-600">Requerido</small>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Zelle -->
+              <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" formControlName="zelleEnabled" class="w-4 h-4 accent-primary" />
+                  <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                    <i class="pi pi-wallet mr-1 text-primary"></i> Zelle
+                  </span>
+                </label>
+                @if (providerForm.get('zelleEnabled')?.value) {
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Email / ID</label>
+                    <input type="text" pInputText formControlName="zelleEmail" placeholder="correo@ejemplo.com" class="w-full" />
+                    @if (providerForm.get('zelleEmail')?.invalid && providerForm.get('zelleEmail')?.touched) {
+                      <small class="text-red-600">Requerido</small>
+                    }
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Titular</label>
+                    <input type="text" pInputText formControlName="zelleTitular" placeholder="Nombre del titular" class="w-full" />
+                    @if (providerForm.get('zelleTitular')?.invalid && providerForm.get('zelleTitular')?.touched) {
+                      <small class="text-red-600">Requerido</small>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Transferencia -->
+              <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" formControlName="transferenciaEnabled" class="w-4 h-4 accent-primary" />
+                  <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                    <i class="pi pi-credit-card mr-1 text-primary"></i> Transferencia
+                  </span>
+                </label>
+                @if (providerForm.get('transferenciaEnabled')?.value) {
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Banco</label>
+                    <input type="text" pInputText formControlName="transferenciaBanco" placeholder="Ej. Mercantil" class="w-full" />
+                    @if (providerForm.get('transferenciaBanco')?.invalid && providerForm.get('transferenciaBanco')?.touched) {
+                      <small class="text-red-600">Requerido</small>
+                    }
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Número de cuenta</label>
+                    <input type="text" pInputText formControlName="transferenciaCuenta" placeholder="Ej. 0105-0000-00-0000000000" class="w-full" />
+                    @if (providerForm.get('transferenciaCuenta')?.invalid && providerForm.get('transferenciaCuenta')?.touched) {
+                      <small class="text-red-600">Requerido</small>
+                    }
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Cédula / RIF</label>
+                    <input type="text" pInputText formControlName="transferenciaCedula" placeholder="Opcional" class="w-full" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Titular</label>
+                    <input type="text" pInputText formControlName="transferenciaTitular" placeholder="Nombre del titular" class="w-full" />
+                    @if (providerForm.get('transferenciaTitular')?.invalid && providerForm.get('transferenciaTitular')?.touched) {
+                      <small class="text-red-600">Requerido</small>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+
           <!-- Información de Deuda -->
           @if (!isEditMode()) {
           <div class="border-t border-gray-200 dark:border-gray-700 pt-6">

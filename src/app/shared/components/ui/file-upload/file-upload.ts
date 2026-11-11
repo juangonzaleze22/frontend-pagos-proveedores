@@ -32,6 +32,9 @@ export class FileUploadComponent implements OnChanges {
   @Input() maxFiles: number = 0; // 0 = sin límite
   @Input() existingImageUrl?: string; // URL de imagen existente (para modo edición)
   @Input() existingImageUrls?: string[]; // URLs de imágenes existentes (modo edición múltiple)
+  @Input() chooseLabel: string = 'Subir Comprobante';
+  @Input() hint: string = 'PNG, JPG, PDF hasta 5MB';
+  @Input() existingLabel: string = 'Comprobante actual';
   @Output() fileSelect = new EventEmitter<File[]>();
 
   @ViewChild('fileUpload') fileUploadComponent?: FileUpload;

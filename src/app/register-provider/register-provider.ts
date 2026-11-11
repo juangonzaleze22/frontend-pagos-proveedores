@@ -15,7 +15,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { MessageService } from 'primeng/api';
 import { SupplierService } from '../shared/services/supplier.service';
-import { Provider } from '../shared/models/provider.model';
+import { Provider, SupplierPaymentAccount } from '../shared/models/provider.model';
 import { AuthContext } from '../contexts/auth.context';
 
 @Component({
@@ -67,12 +67,92 @@ export class RegisterProvider implements OnInit {
       titulo: [''],
       deudaInicial: ['', [Validators.min(0.01)]],
       fechaDeuda: ['', []],
-      diasCredito: [30, [Validators.min(0)]]
+      diasCredito: [30, [Validators.min(0)]],
+      // Cuentas de pago
+      pagoMovilEnabled: [false],
+      pagoMovilBanco: [''],
+      pagoMovilTelefono: [''],
+      pagoMovilCedula: [''],
+      pagoMovilTitular: [''],
+      zelleEnabled: [false],
+      zelleEmail: [''],
+      zelleTitular: [''],
+      transferenciaEnabled: [false],
+      transferenciaBanco: [''],
+      transferenciaCuenta: [''],
+      transferenciaCedula: [''],
+      transferenciaTitular: ['']
     });
 
     // Calcular fecha de vencimiento cuando cambien fecha deuda o días de crédito
     this.providerForm.get('fechaDeuda')?.valueChanges.subscribe(() => this.calculateDueDate());
     this.providerForm.get('diasCredito')?.valueChanges.subscribe(() => this.calculateDueDate());
+
+    this.setupPaymentAccountValidators();
+  }
+
+  /**
+   * Aplica/retira validadores requeridos según el método de pago habilitado.
+   */
+  private setupPaymentAccountValidators(): void {
+    const rules: Record<string, string[]> = {
+      pagoMovilEnabled: ['pagoMovilBanco', 'pagoMovilTelefono', 'pagoMovilCedula', 'pagoMovilTitular'],
+      zelleEnabled: ['zelleEmail', 'zelleTitular'],
+      transferenciaEnabled: ['transferenciaBanco', 'transferenciaCuenta', 'transferenciaTitular']
+    };
+
+    Object.keys(rules).forEach((toggle) => {
+      this.providerForm.get(toggle)?.valueChanges.subscribe((enabled: boolean) => {
+        rules[toggle].forEach((field) => {
+          const control = this.providerForm.get(field);
+          control?.setValidators(enabled ? [Validators.required] : []);
+          control?.updateValueAndValidity();
+        });
+        this.providerForm.updateValueAndValidity();
+      });
+    });
+  }
+
+  private cleanOptionalValue(value: string | null | undefined): string | null {
+    const trimmed = (value ?? '').trim();
+    return trimmed === '' ? null : trimmed;
+  }
+
+  private buildPaymentAccounts(): SupplierPaymentAccount[] {
+    const value = this.providerForm.value;
+    const accounts: SupplierPaymentAccount[] = [];
+
+    if (value.pagoMovilEnabled) {
+      accounts.push({
+        type: 'PAGO_MOVIL',
+        bank: this.cleanOptionalValue(value.pagoMovilBanco),
+        phone: this.cleanOptionalValue(value.pagoMovilTelefono),
+        accountNumber: this.cleanOptionalValue(value.pagoMovilTelefono),
+        holderId: this.cleanOptionalValue(value.pagoMovilCedula),
+        holderName: this.cleanOptionalValue(value.pagoMovilTitular)
+      });
+    }
+
+    if (value.zelleEnabled) {
+      accounts.push({
+        type: 'ZELLE',
+        email: this.cleanOptionalValue(value.zelleEmail),
+        accountNumber: this.cleanOptionalValue(value.zelleEmail),
+        holderName: this.cleanOptionalValue(value.zelleTitular)
+      });
+    }
+
+    if (value.transferenciaEnabled) {
+      accounts.push({
+        type: 'TRANSFER',
+        bank: this.cleanOptionalValue(value.transferenciaBanco),
+        accountNumber: this.cleanOptionalValue(value.transferenciaCuenta),
+        holderId: this.cleanOptionalValue(value.transferenciaCedula),
+        holderName: this.cleanOptionalValue(value.transferenciaTitular)
+      });
+    }
+
+    return accounts;
   }
 
   /**
@@ -146,6 +226,42 @@ export class RegisterProvider implements OnInit {
       phone : provider.phone || '',
       email: provider.email || ''
     });
+
+    const accounts = provider.paymentAccounts || [];
+
+    const pagoMovil = accounts.find(account => account.type === 'PAGO_MOVIL');
+    if (pagoMovil) {
+      this.providerForm.patchValue({
+        pagoMovilEnabled: true,
+        pagoMovilBanco: pagoMovil.bank || '',
+        pagoMovilTelefono: pagoMovil.phone || pagoMovil.accountNumber || '',
+        pagoMovilCedula: pagoMovil.holderId || '',
+        pagoMovilTitular: pagoMovil.holderName || ''
+      });
+    }
+
+    const zelle = accounts.find(account => account.type === 'ZELLE');
+    if (zelle) {
+      this.providerForm.patchValue({
+        zelleEnabled: true,
+        zelleEmail: zelle.email || zelle.accountNumber || '',
+        zelleTitular: zelle.holderName || ''
+      });
+    }
+
+    const transferencia = accounts.find(account => account.type === 'TRANSFER');
+    if (transferencia) {
+      this.providerForm.patchValue({
+        transferenciaEnabled: true,
+        transferenciaBanco: transferencia.bank || '',
+        transferenciaCuenta: transferencia.accountNumber || '',
+        transferenciaCedula: transferencia.holderId || '',
+        transferenciaTitular: transferencia.holderName || ''
+      });
+    }
+
+    // Reaplicar validadores después de cargar los datos
+    this.providerForm.updateValueAndValidity();
   }
 
 
@@ -189,6 +305,8 @@ export class RegisterProvider implements OnInit {
         // phone es opcional
         payload.phone = this.getPhoneForPayload(formValue.phone);
         payload.email = formValue.email && formValue.email.trim() !== '' ? formValue.email.trim() : null;
+
+        payload.paymentAccounts = this.buildPaymentAccounts();
       } else {
         // En modo creación, usar la lógica original
         payload.companyName = formValue.nombre;
@@ -201,6 +319,8 @@ export class RegisterProvider implements OnInit {
         if (formValue.email && formValue.email.trim() !== '') {
           payload.email = formValue.email.trim();
         }
+
+        payload.paymentAccounts = this.buildPaymentAccounts();
 
         // Si se proporciona deuda inicial, incluirla (solo en modo creación)
         if (formValue.deudaInicial && formValue.fechaDeuda) {
@@ -238,7 +358,20 @@ export class RegisterProvider implements OnInit {
               titulo: '',
               deudaInicial: '',
               fechaDeuda: '',
-              diasCredito: 30
+              diasCredito: 30,
+              pagoMovilEnabled: false,
+              pagoMovilBanco: '',
+              pagoMovilTelefono: '',
+              pagoMovilCedula: '',
+              pagoMovilTitular: '',
+              zelleEnabled: false,
+              zelleEmail: '',
+              zelleTitular: '',
+              transferenciaEnabled: false,
+              transferenciaBanco: '',
+              transferenciaCuenta: '',
+              transferenciaCedula: '',
+              transferenciaTitular: ''
             });
             
             // Resetear validaciones y estado del formulario

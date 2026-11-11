@@ -7,9 +7,23 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "#3b82f6", // Blue-500
-        "primary-hover": "#2563eb", // Blue-600
-        "primary-dark": "#1e3a8a", // Navy Blue (para algunas pantallas)
+        // Escala dinámica controlada por BrandingService (variables CSS en runtime).
+        primary: "rgb(var(--brand-500) / <alpha-value>)",
+        "primary-hover": "rgb(var(--brand-600) / <alpha-value>)",
+        "primary-dark": "rgb(var(--brand-800) / <alpha-value>)",
+        blue: {
+          50: "rgb(var(--brand-50) / <alpha-value>)",
+          100: "rgb(var(--brand-100) / <alpha-value>)",
+          200: "rgb(var(--brand-200) / <alpha-value>)",
+          300: "rgb(var(--brand-300) / <alpha-value>)",
+          400: "rgb(var(--brand-400) / <alpha-value>)",
+          500: "rgb(var(--brand-500) / <alpha-value>)",
+          600: "rgb(var(--brand-600) / <alpha-value>)",
+          700: "rgb(var(--brand-700) / <alpha-value>)",
+          800: "rgb(var(--brand-800) / <alpha-value>)",
+          900: "rgb(var(--brand-900) / <alpha-value>)",
+          950: "rgb(var(--brand-950) / <alpha-value>)"
+        },
         "background-light": "#f3f4f6", // Gray-100
         "background-dark": "#18181b", // Zinc-900 (más suave que 950)
         "surface-light": "#ffffff",

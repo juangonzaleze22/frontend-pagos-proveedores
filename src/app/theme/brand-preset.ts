@@ -5,7 +5,7 @@ import Lara from '@primeuix/themes/lara';
  * Preset que extiende Lara y ajusta el dark mode a una paleta neutra
  * (negro + escala de grises zinc) sin tinte azul, con buen contraste.
  */
-export const VencedoraPreset = definePreset(Lara, {
+export const BrandPreset = definePreset(Lara, {
   semantic: {
     colorScheme: {
       dark: {

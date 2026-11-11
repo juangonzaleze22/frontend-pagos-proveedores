@@ -1,0 +1,14 @@
+:host {
+  display: block;
+}
+
+:host ::ng-deep {
+  .p-inputtext {
+    width: 100%;
+  }
+
+  .p-colorpicker-preview {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}

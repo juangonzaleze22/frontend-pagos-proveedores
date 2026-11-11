@@ -136,6 +136,33 @@
                 </p>
               }
             </div>
+            @if (paymentData.destinationAccount) {
+              <div class="md:col-span-2">
+                <p class="text-gray-500 dark:text-gray-400 mb-1">Cuenta Destino del Pago</p>
+                <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-3">
+                  <div class="flex items-center gap-2 mb-1">
+                    <i [class]="getAccountIcon(paymentData.destinationAccount.type) + ' text-primary'"></i>
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                      {{ getAccountTypeLabel(paymentData.destinationAccount.type) }}
+                    </span>
+                    @if (paymentData.destinationAccount.bank) {
+                      <span class="text-xs text-gray-500 dark:text-gray-400">· {{ paymentData.destinationAccount.bank }}</span>
+                    }
+                  </div>
+                  <p class="font-mono font-semibold text-gray-900 dark:text-white break-all">
+                    {{ getAccountMainValue(paymentData.destinationAccount) }}
+                  </p>
+                  <div class="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-500 dark:text-gray-400">
+                    @if (paymentData.destinationAccount.holderName) {
+                      <span>Titular: {{ paymentData.destinationAccount.holderName }}</span>
+                    }
+                    @if (paymentData.destinationAccount.holderId) {
+                      <span>ID: {{ paymentData.destinationAccount.holderId }}</span>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
             @if (paymentData.debt) {
               <div>
                 <p class="text-gray-500 dark:text-gray-400 mb-1">Deuda Asociada</p>

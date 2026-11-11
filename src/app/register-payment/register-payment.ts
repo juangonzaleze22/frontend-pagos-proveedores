@@ -24,7 +24,8 @@ import { PaymentService } from '../shared/services/payment.service';
 import { SupplierService } from '../shared/services/supplier.service';
 import { SelectFilterService } from '../shared/services/select-filter.service';
 import { AuthContext } from '../contexts/auth.context';
-import { Provider, Debt } from '../shared/models/provider.model';
+import { BrandingService } from '../shared/services/branding.service';
+import { Provider, Debt, SupplierPaymentAccount } from '../shared/models/provider.model';
 import { FormatUsdPipe } from '../shared/pipes/format-usd.pipe';
 
 @Component({
@@ -60,6 +61,7 @@ export class RegisterPayment implements OnInit {
   selectedFiles: File[] = [];
   providers = signal<Provider[]>([]);
   debts = signal<any[]>([]);
+  paymentAccounts = signal<SupplierPaymentAccount[]>([]);
   loading = signal<boolean>(false);
   showMessageDialog = signal(false);
   messageData = signal<ApiMessageData | null>(null);
@@ -104,6 +106,64 @@ export class RegisterPayment implements OnInit {
     return this.paymentMethods;
   });
 
+  /**
+   * Cuentas del proveedor compatibles con el método de pago seleccionado.
+   * - Zelle → cuentas ZELLE
+   * - Transferencia en USD → cuentas TRANSFER
+   * - Transferencia en BS → cuentas PAGO_MOVIL
+   */
+  getPaymentAccountOptions(): Array<SupplierPaymentAccount & { label: string }> {
+    const method = this.paymentForm.get('metodoPago')?.value;
+    const pagoEnBolivares = this.pagoEnBolivaresSignal();
+
+    let type: SupplierPaymentAccount['type'] | null = null;
+    if (method === 'Zelle') {
+      type = 'ZELLE';
+    } else if (method === 'Transferencia') {
+      type = pagoEnBolivares ? 'PAGO_MOVIL' : 'TRANSFER';
+    }
+
+    if (!type) {
+      return [];
+    }
+
+    return this.paymentAccounts()
+      .filter(account => account.type === type)
+      .map(account => ({
+        ...account,
+        label: this.buildAccountLabel(account)
+      }));
+  }
+
+  private buildAccountLabel(account: SupplierPaymentAccount): string {
+    const main = account.type === 'ZELLE'
+      ? (account.email || account.accountNumber || '')
+      : account.type === 'PAGO_MOVIL'
+        ? (account.phone || account.accountNumber || '')
+        : (account.accountNumber || '');
+
+    const parts = [main];
+    if (account.bank) parts.push(account.bank);
+    if (account.holderName) parts.push(account.holderName);
+    return parts.filter(Boolean).join(' · ');
+  }
+
+  private syncDestinationAccount(): void {
+    const options = this.getPaymentAccountOptions();
+    const control = this.paymentForm.get('cuentaDestinoId');
+    const current = control?.value;
+
+    if (options.length === 0) {
+      control?.setValue(null, { emitEvent: false });
+      return;
+    }
+
+    const stillValid = options.some(account => account.id === current);
+    if (!stillValid) {
+      control?.setValue(options[0].id ?? null, { emitEvent: false });
+    }
+  }
+
   constructor(
     private fb: FormBuilder,
     private router: Router,
@@ -113,7 +173,8 @@ export class RegisterPayment implements OnInit {
     private messageService: MessageService,
     private location: Location,
     private authContext: AuthContext,
-    public selectFilter: SelectFilterService
+    public selectFilter: SelectFilterService,
+    public branding: BrandingService
   ) {
     this.paymentForm = this.fb.group({
       emisor: ['', [Validators.required]],
@@ -124,6 +185,7 @@ export class RegisterPayment implements OnInit {
       proveedorId: ['', [Validators.required]],
       debtId: ['', [Validators.required]],
       metodoPago: ['Zelle', [Validators.required]],
+      cuentaDestinoId: [null as number | null],
       pagoEnBolivares: [false],
       tasaDolar: ['', []],
       montoBolivares: ['', []],
@@ -216,6 +278,7 @@ export class RegisterPayment implements OnInit {
         proveedorId: payment.supplierId || '',
         debtId: payment.debtId || '',
         metodoPago: payment.paymentMethod || 'Zelle',
+        cuentaDestinoId: payment.destinationAccount?.id ?? null,
         pagoEnBolivares: pagoEnBolivares,
         tasaDolar: payment.exchangeRate || '',
         montoBolivares: payment.amountInBolivares || '',
@@ -227,6 +290,9 @@ export class RegisterPayment implements OnInit {
 
       // Actualizar validación del monto
       this.paymentForm.get('monto')?.updateValueAndValidity();
+
+      // Ajustar la cuenta destino según el método/cuenta cargada
+      this.syncDestinationAccount();
     });
   }
 
@@ -250,6 +316,19 @@ export class RegisterPayment implements OnInit {
 
   onProviderChange(provider: Provider | null) {
     if (provider) {
+      // Cargar las cuentas de pago del proveedor
+      this.paymentAccounts.set(provider.paymentAccounts || []);
+      this.supplierService.getById(provider.id).subscribe({
+        next: (fullProvider) => {
+          this.paymentAccounts.set(fullProvider.paymentAccounts || []);
+          this.paymentForm.patchValue({ correoEmisor: fullProvider.email ?? provider.email ?? '' });
+          this.syncDestinationAccount();
+        },
+        error: () => {
+          this.syncDestinationAccount();
+        }
+      });
+
       // Cargar el email del proveedor (distribuidor) en correo del emisor
       this.paymentForm.patchValue({ correoEmisor: provider.email ?? '' });
       // Limpiar la deuda seleccionada al cambiar de proveedor
@@ -271,9 +350,11 @@ export class RegisterPayment implements OnInit {
       this.paymentForm.patchValue({
         proveedorId: null,
         debtId: null,
+        cuentaDestinoId: null,
         monto: ''
       });
       this.debts.set([]);
+      this.paymentAccounts.set([]);
       this.paymentForm.get('monto')?.updateValueAndValidity();
     }
   }
@@ -381,6 +462,7 @@ export class RegisterPayment implements OnInit {
         isBolivares: Boolean(formValue.pagoEnBolivares),
         createdBy: this.authContext.user()?.id,
         nota: formValue.nota?.trim() || undefined,
+        destinationAccountId: formValue.cuentaDestinoId ? Number(formValue.cuentaDestinoId) : undefined,
       };
 
       // Excedente: siempre se envía como saldo a favor (CREDIT)
@@ -421,6 +503,7 @@ export class RegisterPayment implements OnInit {
             this.paymentForm.reset({
               metodoPago: 'Zelle',
               numeroConfirmacion: '',
+              cuentaDestinoId: null,
               pagoEnBolivares: false,
               tasaDolar: '',
               montoBolivares: '',
@@ -559,6 +642,8 @@ export class RegisterPayment implements OnInit {
         numeroConfirmacionControl?.setValidators([Validators.required]);
         numeroConfirmacionControl?.updateValueAndValidity();
       }
+
+      this.syncDestinationAccount();
     });
   }
 
@@ -603,6 +688,8 @@ export class RegisterPayment implements OnInit {
       this.paymentForm.get('tasaDolar')?.updateValueAndValidity();
       this.paymentForm.get('montoBolivares')?.updateValueAndValidity();
       this.paymentForm.get('monto')?.updateValueAndValidity();
+
+      this.syncDestinationAccount();
     });
 
     // Suscripción a cambios de tasaDolar y montoBolivares para calcular monto automáticamente

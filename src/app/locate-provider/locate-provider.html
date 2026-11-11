@@ -137,6 +137,40 @@
                 </div>
               </div>
             </div>
+
+            @if (provider!.paymentAccounts && provider!.paymentAccounts!.length > 0) {
+              <div class="pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700">
+                <label class="block text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                  Cuentas para Pagos
+                </label>
+                <div class="space-y-2">
+                  @for (account of provider!.paymentAccounts!; track $index) {
+                    <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800/50 p-3">
+                      <div class="flex items-center gap-2 mb-1">
+                        <i [class]="getAccountIcon(account.type) + ' text-primary text-sm'"></i>
+                        <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                          {{ getAccountTypeLabel(account.type) }}
+                        </span>
+                        @if (account.bank) {
+                          <span class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">· {{ account.bank }}</span>
+                        }
+                      </div>
+                      <p class="text-sm font-semibold font-mono text-slate-900 dark:text-white break-all">
+                        {{ getAccountMainValue(account) }}
+                      </p>
+                      <div class="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
+                        @if (account.holderName) {
+                          <span>Titular: {{ account.holderName }}</span>
+                        }
+                        @if (account.holderId) {
+                          <span>ID: {{ account.holderId }}</span>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
           </div>
 
           <!-- Lista de Deudas -->
@@ -240,6 +274,28 @@
                   <p class="text-[10px] sm:text-xs text-blue-700 dark:text-blue-300">
                     Saldo excedente aplicado: <span class="font-semibold">{{ (debt.surplusAmountApplied ?? 0) | formatUsd }}</span>
                   </p>
+                </div>
+                }
+
+                @if (debt.invoiceFiles && debt.invoiceFiles.length > 0) {
+                <div class="mt-2 sm:mt-3">
+                  <p class="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                    Factura adjunta
+                  </p>
+                  <div class="grid grid-cols-2 gap-2">
+                    @for (invoiceUrl of debt.invoiceFiles; track $index) {
+                      <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-slate-800/50 aspect-square">
+                        <app-lazy-image
+                          [src]="invoiceUrl"
+                          [alt]="'Factura ' + ($index + 1) + ' de la deuda #' + debt.id"
+                          width="100%"
+                          height="100%"
+                          objectFit="cover"
+                          [rounded]="false"
+                          [preview]="true" />
+                      </div>
+                    }
+                  </div>
                 </div>
                 }
 
@@ -422,6 +478,22 @@
             }
           </div>
           }
+
+          <div>
+            <label class="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-0.5 sm:mb-1">
+              Factura(s) del pedido
+            </label>
+            <app-file-upload
+              #invoiceUpload
+              accept="image/*,.pdf"
+              [multiple]="true"
+              [maxFiles]="2"
+              [existingImageUrls]="existingInvoiceUrls()"
+              chooseLabel="Subir factura"
+              hint="PNG, JPG o PDF hasta 5MB (máximo 2 archivos)"
+              existingLabel="Factura actual"
+              (fileSelect)="onInvoiceSelect($event)" />
+          </div>
 
           <div class="pt-3 sm:pt-4 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
             <p-button label="Cancelar" severity="secondary" (onClick)="onCancel()" />

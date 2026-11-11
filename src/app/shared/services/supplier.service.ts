@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from './api.service';
-import { Provider, Debt, mapProviderFromAPI, mapProviderToAPI } from '../models/provider.model';
+import { Provider, Debt, SupplierPaymentAccount, mapProviderFromAPI, mapProviderToAPI } from '../models/provider.model';
 import { Payment } from '../models/payment.model';
 import { ApiResponse, PaginatedResponse } from '../models/api-response.model';
 import { parseLocalDate, parseLocalDateOptional } from '../utils/date.utils';
@@ -69,6 +69,7 @@ export class SupplierService {
     debtDate?: string;
     creditDays?: number;
     title?: string;
+    paymentAccounts?: SupplierPaymentAccount[];
   }): Observable<Provider> {
     return this.apiService.post<Provider>('/suppliers', data).pipe(
       map(response => {
@@ -89,6 +90,7 @@ export class SupplierService {
     taxId: string;
     phone: string;
     email: string;
+    paymentAccounts: SupplierPaymentAccount[];
   }>): Observable<Provider> {
     return this.apiService.put<Provider>(`/suppliers/${id}`, data).pipe(
       map(response => {
@@ -192,6 +194,7 @@ export class SupplierService {
       paymentDate: parseLocalDate(apiPayment.paymentDate),
       receiptFiles: apiPayment.receiptFiles ?? (apiPayment.receiptFile ? [apiPayment.receiptFile] : []),
       verified: apiPayment.verified,
+      destinationAccount: apiPayment.destinationAccount ?? null,
       createdBy: apiPayment.createdBy,
       createdByUser: apiPayment.createdByUser,
       createdAt: apiPayment.createdAt ? new Date(apiPayment.createdAt) : undefined,

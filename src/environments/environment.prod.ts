@@ -1,4 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://khaki-porcupine-994433.hostingersite.com/api'
+  apiUrl: '',
+  /** Muestra el módulo de apariencia/marca en el admin (solo ADMINISTRADOR). */
+  showBrandingModule: true
 };

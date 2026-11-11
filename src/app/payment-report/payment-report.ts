@@ -29,6 +29,7 @@ import { SupplierService } from '../shared/services/supplier.service';
 import { PaymentService } from '../shared/services/payment.service';
 import { SelectFilterService } from '../shared/services/select-filter.service';
 import { AuthContext } from '../contexts/auth.context';
+import { BrandingService } from '../shared/services/branding.service';
 import { Payment } from '../shared/models/payment.model';
 import { Provider } from '../shared/models/provider.model';
 import { formatLocalDate } from '../shared/utils/date.utils';
@@ -121,7 +122,8 @@ export class PaymentReport implements OnInit {
     private route: ActivatedRoute,
     private location: Location,
     public selectFilter: SelectFilterService,
-    private authContext: AuthContext
+    private authContext: AuthContext,
+    public branding: BrandingService
   ) {
     this.loadProviders();
   }

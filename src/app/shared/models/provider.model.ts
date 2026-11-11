@@ -1,6 +1,20 @@
 import { Payment } from './payment.model';
 import { parseLocalDateOptional } from '../utils/date.utils';
 
+export type SupplierPaymentAccountType = 'PAGO_MOVIL' | 'ZELLE' | 'TRANSFER';
+
+/** Datos de una cuenta de pago del distribuidor. */
+export interface SupplierPaymentAccount {
+  id?: number;
+  type: SupplierPaymentAccountType;
+  bank?: string | null;
+  accountNumber?: string | null;
+  holderName?: string | null;
+  holderId?: string | null;
+  email?: string | null;
+  phone?: string | null;
+}
+
 export interface Provider {
   id: number;
   companyName: string;
@@ -11,6 +25,7 @@ export interface Provider {
   totalDebt: number;
   totalCreditAvailable?: number;
   lastPaymentDate?: Date;
+  paymentAccounts?: SupplierPaymentAccount[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -23,6 +38,8 @@ export interface ProviderOrder {
   dispatchDate: Date;
   creditDays: number;
   dueDate: Date;
+  /** URLs de las facturas adjuntas (máx. 2). */
+  invoiceFiles?: string[];
   createdAt?: Date;
 }
 
@@ -57,6 +74,8 @@ export interface Debt {
   debtNumber?: number;
   /** Monto de saldo excedente (crédito) aplicado a esta deuda al crearla. Enviado por el backend si está disponible. */
   surplusAmountApplied?: number;
+  /** URLs de las facturas adjuntas al pedido asociado. */
+  invoiceFiles?: string[];
 }
 
 // Helper para mapear desde API
@@ -70,6 +89,7 @@ export function mapProviderFromAPI(apiProvider: any): Provider {
     status: apiProvider.status,
     totalDebt: apiProvider.totalDebt,
     totalCreditAvailable: apiProvider.totalCreditAvailable || 0,
+    paymentAccounts: Array.isArray(apiProvider.paymentAccounts) ? apiProvider.paymentAccounts : [],
     lastPaymentDate: parseLocalDateOptional(apiProvider.lastPaymentDate),
     createdAt: apiProvider.createdAt ? new Date(apiProvider.createdAt) : undefined,
     updatedAt: apiProvider.updatedAt ? new Date(apiProvider.updatedAt) : undefined

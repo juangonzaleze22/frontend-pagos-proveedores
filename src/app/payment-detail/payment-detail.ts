@@ -127,6 +127,34 @@ export class PaymentDetail implements OnInit {
     return iconMap[method] || 'pi pi-circle';
   }
 
+  getAccountTypeLabel(type: string): string {
+    const labels: Record<string, string> = {
+      PAGO_MOVIL: 'Pago Móvil',
+      ZELLE: 'Zelle',
+      TRANSFER: 'Transferencia'
+    };
+    return labels[type] || type;
+  }
+
+  getAccountIcon(type: string): string {
+    const icons: Record<string, string> = {
+      PAGO_MOVIL: 'pi pi-mobile',
+      ZELLE: 'pi pi-wallet',
+      TRANSFER: 'pi pi-credit-card'
+    };
+    return icons[type] || 'pi pi-money-bill';
+  }
+
+  getAccountMainValue(account: any): string {
+    if (account?.type === 'ZELLE') {
+      return account.email || account.accountNumber || '';
+    }
+    if (account?.type === 'PAGO_MOVIL') {
+      return account.phone || account.accountNumber || '';
+    }
+    return account?.accountNumber || '';
+  }
+
   getDebtStatusLabel(status: string): string {
     const statusMap: Record<string, string> = {
       'PENDING': 'Pendiente',

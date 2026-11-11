@@ -16,6 +16,7 @@ import { SelectModule } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { PaymentList } from '../shared/components/data/payment-list/payment-list';
 import { AuthContext } from '../contexts/auth.context';
+import { BrandingService } from '../shared/services/branding.service';
 import { formatUsd } from '../shared/utils/format-usd';
 
 const MODAL_DATE_FILTER_OPTIONS: { label: string; value: 'today' | 'last7' | 'month' | 'all' }[] = [
@@ -122,7 +123,8 @@ export class SupervisorDashboard {
     private reportService: ReportService,
     private supplierService: SupplierService,
     private router: Router,
-    private authContext: AuthContext
+    private authContext: AuthContext,
+    public branding: BrandingService
   ) {
     this.loadDashboard();
   }

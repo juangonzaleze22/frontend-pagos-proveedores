@@ -9,7 +9,7 @@ import { ThemeService } from './shared/services/theme.service';
   styleUrl: './app.scss'
 })
 export class App {
-  protected readonly title = signal('vencedora-pagos-proveedores');
+  protected readonly title = signal('gestion-pagos-proveedores');
 
   constructor(private themeService: ThemeService) {
     // Inicializa el tema al arrancar (lee localStorage y preferencia del sistema)

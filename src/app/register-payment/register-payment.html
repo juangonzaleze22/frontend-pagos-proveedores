@@ -173,6 +173,35 @@
             </div>
           </div>
 
+          <!-- Cuenta destino del pago (opcional) -->
+          @if (paymentForm.get('metodoPago')?.value !== 'Efectivo') {
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="destinationAccount">
+                Cuenta destino del pago
+                <span class="text-xs text-gray-500 dark:text-gray-400 font-normal ml-1">(Opcional)</span>
+              </label>
+              @if (getPaymentAccountOptions().length > 0) {
+                <p-select
+                  id="destinationAccount"
+                  formControlName="cuentaDestinoId"
+                  [options]="getPaymentAccountOptions()"
+                  optionLabel="label"
+                  optionValue="id"
+                  placeholder="Seleccione la cuenta usada"
+                  [showClear]="true"
+                  styleClass="w-full" />
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Se guardará en el detalle del pago para saber a qué cuenta se envió el dinero.
+                </p>
+              } @else {
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  <i class="pi pi-info-circle mr-1"></i>
+                  El proveedor no tiene cuentas de pago configuradas para este método.
+                </p>
+              }
+            </div>
+          }
+
           <!-- Selección de Deuda -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="debt">
@@ -359,7 +388,7 @@
   </app-app-card>
 
   <p class="mt-6 text-center text-xs text-gray-400 dark:text-gray-600">
-    © 2026 Sistema de Gestión de pagos de proveedores. Ferretería La Vencedora.
+    {{ branding.footerText() }}
   </p>
 </app-page-container>
 

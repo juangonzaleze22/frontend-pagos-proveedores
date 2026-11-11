@@ -1,4 +1,4 @@
-import { Component, signal, ChangeDetectionStrategy, ChangeDetectorRef, computed } from '@angular/core';
+import { Component, signal, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef, computed } from '@angular/core';
 import { CommonModule, DatePipe, NgClass } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -22,9 +22,11 @@ import { TooltipModule } from 'primeng/tooltip';
 import { SupplierService } from '../shared/services/supplier.service';
 import { OrderService } from '../shared/services/order.service';
 import { ReportService } from '../shared/services/report.service';
-import { Provider, Debt } from '../shared/models/provider.model';
+import { Provider, Debt, SupplierPaymentAccount } from '../shared/models/provider.model';
 import { Location } from '@angular/common';
 import { ConfirmDialog } from '../shared/components/ui/confirm-dialog/confirm-dialog';
+import { FileUploadComponent } from '../shared/components/ui/file-upload/file-upload';
+import { LazyImage } from '../shared/components/ui/lazy-image/lazy-image';
 import { AuthContext } from '../contexts/auth.context';
 import { FormatUsdPipe } from '../shared/pipes/format-usd.pipe';
 import { formatUsd } from '../shared/utils/format-usd';
@@ -52,6 +54,8 @@ import { formatUsd } from '../shared/utils/format-usd';
     InputIconModule,
     DatePipe,
     ConfirmDialog,
+    FileUploadComponent,
+    LazyImage,
     FormatUsdPipe
   ],
   providers: [MessageService],
@@ -65,7 +69,11 @@ export class LocateProvider {
   searchLoading: boolean = false;
   selectedProvider = signal<Provider | null>(null);
   debts = signal<Debt[]>([]);
-  
+  existingInvoiceUrls = signal<string[]>([]);
+  invoiceFiles: File[] = [];
+
+  @ViewChild('invoiceUpload') invoiceUploadComponent?: FileUploadComponent;
+
   /**
    * Suma de restantes por deuda (igual que reporte detallado). Si no hay deudas cargadas, usa totalDebt del proveedor.
    * Evita mostrar cifras incoherentes cuando el API devuelve totalDebt desalineado (p. ej. −excedente aplicado).
@@ -283,6 +291,55 @@ export class LocateProvider {
     return debt.payments.filter(p => !p.deleted).length;
   }
 
+  getAccountTypeLabel(type: SupplierPaymentAccount['type']): string {
+    const labels: Record<string, string> = {
+      PAGO_MOVIL: 'Pago Móvil',
+      ZELLE: 'Zelle',
+      TRANSFER: 'Transferencia'
+    };
+    return labels[type] || type;
+  }
+
+  getAccountIcon(type: SupplierPaymentAccount['type']): string {
+    const icons: Record<string, string> = {
+      PAGO_MOVIL: 'pi pi-mobile',
+      ZELLE: 'pi pi-wallet',
+      TRANSFER: 'pi pi-credit-card'
+    };
+    return icons[type] || 'pi pi-money-bill';
+  }
+
+  getAccountMainValue(account: SupplierPaymentAccount): string {
+    if (account.type === 'ZELLE') {
+      return account.email || account.accountNumber || '';
+    }
+    if (account.type === 'PAGO_MOVIL') {
+      return account.phone || account.accountNumber || '';
+    }
+    return account.accountNumber || '';
+  }
+
+  onInvoiceSelect(files: File[]): void {
+    this.invoiceFiles = files || [];
+  }
+
+  private buildInvoicePayload(): {
+    invoiceFiles: File[];
+    existingInvoiceFiles: string[];
+    removeInvoice: boolean;
+  } {
+    const files = this.invoiceUploadComponent?.getSelectedFiles() ?? this.invoiceFiles ?? [];
+    const existing = this.invoiceUploadComponent?.getExistingImageUrls() ?? [];
+    const hadExisting = this.existingInvoiceUrls().length > 0;
+    const removedAll = this.invoiceUploadComponent?.imageExplicitlyRemoved?.() ?? false;
+
+    return {
+      invoiceFiles: files,
+      existingInvoiceFiles: existing,
+      removeInvoice: hadExisting && removedAll && files.length === 0
+    };
+  }
+
   getDueDateStatus(debt: Debt): 'safe' | 'warning' | 'danger' {
     if (!debt.dueDate) {
       return 'safe';
@@ -394,6 +451,11 @@ export class LocateProvider {
         });
         this.editingOrderId.set(order.id);
         this.calculateDueDate();
+
+        this.invoiceUploadComponent?.clear();
+        this.invoiceFiles = [];
+        this.existingInvoiceUrls.set(order.invoiceFiles ?? []);
+
         this.cdr.detectChanges();
       },
       error: () => {
@@ -474,6 +536,7 @@ export class LocateProvider {
     const dispatchDate = formValue.fechaDespacho instanceof Date
       ? formValue.fechaDespacho
       : new Date(formValue.fechaDespacho);
+    const invoicePayload = this.buildInvoicePayload();
 
     const onSuccess = () => {
       this.loading.set(false);
@@ -481,6 +544,9 @@ export class LocateProvider {
       this.editingSurplusBaseline.set(0);
       this.fechaVencimiento.set(null);
       this.orderForm.reset({ title: '', diasCredito: 30, surplusAmountToApply: null });
+      this.invoiceFiles = [];
+      this.existingInvoiceUrls.set([]);
+      this.invoiceUploadComponent?.clear();
       this.reportService.getSupplierDetailed(currentProvider.id).subscribe({
         next: (report) => {
           this.selectedProvider.set({
@@ -514,7 +580,10 @@ export class LocateProvider {
           dispatchDate,
           creditDays: formValue.diasCredito,
           amount: formValue.monto,
-          surplusAmountToApply: surplus
+          surplusAmountToApply: surplus,
+          invoiceFiles: invoicePayload.invoiceFiles,
+          existingInvoiceFiles: invoicePayload.existingInvoiceFiles,
+          removeInvoice: invoicePayload.removeInvoice
         })
         .subscribe({
         next: () => {
@@ -552,6 +621,7 @@ export class LocateProvider {
         amount: formValue.monto,
         dispatchDate,
         creditDays: formValue.diasCredito,
+        invoiceFiles: invoicePayload.invoiceFiles,
         ...(surplus > 0 && { surplusAmountToApply: surplus })
       }).subscribe({
         next: () => {
@@ -579,6 +649,9 @@ export class LocateProvider {
     this.editingSurplusBaseline.set(0);
     this.fechaVencimiento.set(null);
     this.orderForm.reset({ diasCredito: 30, surplusAmountToApply: null });
+    this.invoiceFiles = [];
+    this.existingInvoiceUrls.set([]);
+    this.invoiceUploadComponent?.clear();
   }
 
   onBackToDashboard() {

@@ -90,6 +90,31 @@
                 }
               </div>
             </div>
+
+            @if (paymentData.destinationAccount) {
+              <div class="grid grid-cols-2 py-4 border-b border-gray-50 dark:border-gray-800/50 gap-2">
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Cuenta Destino</p>
+                <div class="flex flex-col gap-1">
+                  <div class="flex items-center gap-2">
+                    <i [class]="getAccountIcon(paymentData.destinationAccount.type) + ' text-primary text-sm'"></i>
+                    <p class="text-gray-900 dark:text-white text-sm font-bold">
+                      {{ getAccountTypeLabel(paymentData.destinationAccount.type) }}
+                      @if (paymentData.destinationAccount.bank) {
+                        <span class="font-normal text-gray-500">· {{ paymentData.destinationAccount.bank }}</span>
+                      }
+                    </p>
+                  </div>
+                  <p class="text-xs font-mono text-gray-700 dark:text-gray-300 break-all">
+                    {{ getAccountMainValue(paymentData.destinationAccount) }}
+                  </p>
+                  @if (paymentData.destinationAccount.holderName) {
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                      Titular: {{ paymentData.destinationAccount.holderName }}
+                    </p>
+                  }
+                </div>
+              </div>
+            }
             
             @if (paymentData.senderName) {
               <div class="grid grid-cols-2 py-4 border-b border-gray-50 dark:border-gray-800/50">
