@@ -35,6 +35,7 @@ export class FileUploadComponent implements OnChanges {
   @Input() chooseLabel: string = 'Subir Comprobante';
   @Input() hint: string = 'PNG, JPG, PDF hasta 5MB';
   @Input() existingLabel: string = 'Comprobante actual';
+  @Input() compact: boolean = false;
   @Output() fileSelect = new EventEmitter<File[]>();
 
   @ViewChild('fileUpload') fileUploadComponent?: FileUpload;

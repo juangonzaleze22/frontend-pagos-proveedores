@@ -70,9 +70,9 @@ export class RegisterProvider implements OnInit {
       phone: ['', []],
       email: ['', []],
       titulo: [''],
-      deudaInicial: ['', [Validators.min(0.01)]],
-      fechaDeuda: ['', []],
-      diasCredito: [30, [Validators.min(0)]],
+      deudaInicial: ['', [Validators.required, Validators.min(0.01)]],
+      fechaDeuda: ['', [Validators.required]],
+      diasCredito: [30, [Validators.required, Validators.min(0)]],
       // Cuentas de pago
       pagoMovilEnabled: [false],
       pagoMovilBanco: [''],

@@ -284,33 +284,32 @@
               </div>
             </div>
 
-            <!-- Segunda fila: Monto (mitad del ancho) -->
-            <div class="max-w-md">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="amount">
-                Monto Adeudado Inicial <span class="text-red-500">*</span>
-              </label>
-              <p-iconfield iconPosition="left" class="w-full">
-                <p-inputicon>
-                  <span class="text-gray-500 dark:text-gray-400 font-bold">$</span>
-                </p-inputicon>
-                <p-inputNumber
-                  id="amount"
-                  formControlName="deudaInicial"
-                  mode="decimal"
-                  [minFractionDigits]="2"
-                  [maxFractionDigits]="2"
-                  placeholder="0.00"
-                  currency="USD"
-                  styleClass="w-full" />
-              </p-iconfield>
-              @if (providerForm.get('deudaInicial')?.invalid && providerForm.get('deudaInicial')?.touched) {
-                <small class="text-red-600">El monto es requerido</small>
-              }
-            </div>
+            <!-- Segunda fila: Monto y facturas lado a lado -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="amount">
+                  Monto Adeudado Inicial <span class="text-red-500">*</span>
+                </label>
+                <p-iconfield iconPosition="left" class="w-full">
+                  <p-inputicon>
+                    <span class="text-gray-500 dark:text-gray-400 font-bold">$</span>
+                  </p-inputicon>
+                  <p-inputNumber
+                    id="amount"
+                    formControlName="deudaInicial"
+                    mode="decimal"
+                    [minFractionDigits]="2"
+                    [maxFractionDigits]="2"
+                    placeholder="0.00"
+                    currency="USD"
+                    styleClass="w-full" />
+                </p-iconfield>
+                @if (providerForm.get('deudaInicial')?.invalid && providerForm.get('deudaInicial')?.touched) {
+                  <small class="text-red-600">El monto es requerido</small>
+                }
+              </div>
 
-            <!-- Facturas de la deuda inicial -->
-            @if ((providerForm.get('deudaInicial')?.value || 0) > 0) {
-              <div class="mt-6">
+              <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Factura(s) de la deuda inicial
                 </label>
@@ -319,11 +318,12 @@
                   accept="image/*,.pdf"
                   [multiple]="true"
                   [maxFiles]="2"
+                  [compact]="true"
                   chooseLabel="Subir factura"
-                  hint="PNG, JPG o PDF hasta 5MB (máximo 2 archivos)"
+                  hint="PNG, JPG o PDF · máx. 2 archivos"
                   (fileSelect)="onInvoiceSelect($event)" />
               </div>
-            }
+            </div>
           </div>
           }
 

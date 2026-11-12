@@ -293,14 +293,16 @@
                   <p class="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Factura adjunta
                   </p>
-                  <div class="grid grid-cols-2 gap-2">
+                  <div class="flex flex-wrap items-center gap-2">
                     @for (invoiceUrl of debt.invoiceFiles; track $index) {
-                      <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-slate-800/50 aspect-square">
+                      <div
+                        class="shrink-0 cursor-zoom-in border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden bg-gray-50 dark:bg-slate-800/50"
+                        style="width: 48px; height: 48px; flex: 0 0 48px; max-width: 48px; max-height: 48px;">
                         <app-lazy-image
                           [src]="invoiceUrl"
                           [alt]="'Factura ' + ($index + 1) + ' de la deuda #' + debt.id"
-                          width="100%"
-                          height="100%"
+                          width="48px"
+                          height="48px"
                           objectFit="cover"
                           [rounded]="false"
                           [preview]="true" />
