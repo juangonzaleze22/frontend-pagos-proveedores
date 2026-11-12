@@ -75,6 +75,7 @@ export class RegisterPayment implements OnInit {
   paymentMethods = [
     { label: 'Zelle', value: 'Zelle' },
     { label: 'Transferencia', value: 'Transferencia' },
+    { label: 'Pago Móvil', value: 'Pago Móvil' },
     { label: 'Efectivo', value: 'Efectivo' }
   ];
 
@@ -112,17 +113,28 @@ export class RegisterPayment implements OnInit {
    * - Transferencia en USD → cuentas TRANSFER
    * - Transferencia en BS → cuentas PAGO_MOVIL
    */
-  getPaymentAccountOptions(): Array<SupplierPaymentAccount & { label: string }> {
+  getExpectedAccountType(): SupplierPaymentAccount['type'] | null {
     const method = this.paymentForm.get('metodoPago')?.value;
     const pagoEnBolivares = this.pagoEnBolivaresSignal();
 
-    let type: SupplierPaymentAccount['type'] | null = null;
     if (method === 'Zelle') {
-      type = 'ZELLE';
-    } else if (method === 'Transferencia') {
-      type = pagoEnBolivares ? 'PAGO_MOVIL' : 'TRANSFER';
+      return 'ZELLE';
     }
+    if (method === 'Pago Móvil') {
+      return 'PAGO_MOVIL';
+    }
+    if (method === 'Transferencia') {
+      return pagoEnBolivares ? 'PAGO_MOVIL' : 'TRANSFER';
+    }
+    return null;
+  }
 
+  isAccountCompatible(account: SupplierPaymentAccount): boolean {
+    return this.getExpectedAccountType() === account.type;
+  }
+
+  getPaymentAccountOptions(): Array<SupplierPaymentAccount & { label: string }> {
+    const type = this.getExpectedAccountType();
     if (!type) {
       return [];
     }
@@ -133,6 +145,76 @@ export class RegisterPayment implements OnInit {
         ...account,
         label: this.buildAccountLabel(account)
       }));
+  }
+
+  getAccountTypeLabel(type: SupplierPaymentAccount['type']): string {
+    const labels: Record<string, string> = {
+      PAGO_MOVIL: 'Pago Móvil',
+      ZELLE: 'Zelle',
+      TRANSFER: 'Transferencia'
+    };
+    return labels[type] || type;
+  }
+
+  getAccountIcon(type: SupplierPaymentAccount['type']): string {
+    const icons: Record<string, string> = {
+      PAGO_MOVIL: 'pi pi-mobile',
+      ZELLE: 'pi pi-wallet',
+      TRANSFER: 'pi pi-credit-card'
+    };
+    return icons[type] || 'pi pi-money-bill';
+  }
+
+  /** Texto completo de la cuenta para copiar al portapapeles. */
+  buildAccountCopyText(account: SupplierPaymentAccount): string {
+    const lines: string[] = [this.getAccountTypeLabel(account.type)];
+    if (account.bank) lines.push(`Banco: ${account.bank}`);
+
+    if (account.type === 'ZELLE') {
+      const email = account.email || account.accountNumber;
+      if (email) lines.push(`Email/ID: ${email}`);
+    } else if (account.type === 'PAGO_MOVIL') {
+      const phone = account.phone || account.accountNumber;
+      if (phone) lines.push(`Teléfono: ${phone}`);
+      if (account.holderId) lines.push(`CI/RIF: ${account.holderId}`);
+    } else {
+      if (account.accountNumber) lines.push(`Cuenta: ${account.accountNumber}`);
+      if (account.holderId) lines.push(`CI/RIF: ${account.holderId}`);
+    }
+
+    if (account.holderName) lines.push(`Titular: ${account.holderName}`);
+    return lines.join('\n');
+  }
+
+  getAccountMainValue(account: SupplierPaymentAccount): string {
+    if (account.type === 'ZELLE') {
+      return account.email || account.accountNumber || '';
+    }
+    if (account.type === 'PAGO_MOVIL') {
+      return account.phone || account.accountNumber || '';
+    }
+    return account.accountNumber || '';
+  }
+
+  copyAccountValue(account: SupplierPaymentAccount): void {
+    const value = this.buildAccountCopyText(account);
+    if (!value || !navigator.clipboard) {
+      return;
+    }
+    navigator.clipboard.writeText(value).then(() => {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Copiado',
+        detail: 'Todos los datos de la cuenta se copiaron al portapapeles',
+        life: 2000
+      });
+    }).catch(() => {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo copiar el dato de la cuenta'
+      });
+    });
   }
 
   private buildAccountLabel(account: SupplierPaymentAccount): string {

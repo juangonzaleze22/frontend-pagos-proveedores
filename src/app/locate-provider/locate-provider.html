@@ -155,15 +155,26 @@
                           <span class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">· {{ account.bank }}</span>
                         }
                       </div>
-                      <p class="text-sm font-semibold font-mono text-slate-900 dark:text-white break-all">
-                        {{ getAccountMainValue(account) }}
-                      </p>
+                      <div class="flex items-center gap-2">
+                        <p class="text-sm font-semibold font-mono text-slate-900 dark:text-white break-all">
+                          {{ getAccountMainValue(account) }}
+                        </p>
+                        <p-button
+                          icon="pi pi-copy"
+                          [text]="true"
+                          [rounded]="true"
+                          size="small"
+                          severity="secondary"
+                          pTooltip="Copiar todos los datos de la cuenta"
+                          tooltipPosition="top"
+                          (onClick)="copyAccountData(account)" />
+                      </div>
                       <div class="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
                         @if (account.holderName) {
                           <span>Titular: {{ account.holderName }}</span>
                         }
                         @if (account.holderId) {
-                          <span>ID: {{ account.holderId }}</span>
+                          <span>CI: {{ account.holderId }}</span>
                         }
                       </div>
                     </div>

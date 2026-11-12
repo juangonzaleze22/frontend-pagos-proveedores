@@ -28,7 +28,7 @@ export interface Payment {
     debtNumber?: number;
   };
   amount: number;
-  paymentMethod: 'Zelle' | 'Transferencia' | 'Efectivo';
+  paymentMethod: 'Zelle' | 'Transferencia' | 'Pago Móvil' | 'Efectivo';
   senderName: string;
   senderEmail?: string;
   confirmationNumber?: string;
@@ -75,12 +75,13 @@ export interface PaymentVerification {
 }
 
 // Tipos para mapeo desde API
-export type PaymentMethodAPI = 'ZELLE' | 'TRANSFER' | 'CASH';
+export type PaymentMethodAPI = 'ZELLE' | 'TRANSFER' | 'PAGO_MOVIL' | 'CASH';
 
 export function mapPaymentMethodFromAPI(method: PaymentMethodAPI): Payment['paymentMethod'] {
   const mapping: Record<PaymentMethodAPI, Payment['paymentMethod']> = {
     ZELLE: 'Zelle',
     TRANSFER: 'Transferencia',
+    PAGO_MOVIL: 'Pago Móvil',
     CASH: 'Efectivo'
   };
   return mapping[method] || 'Efectivo';
@@ -90,6 +91,7 @@ export function mapPaymentMethodToAPI(method: Payment['paymentMethod']): Payment
   const mapping: Record<Payment['paymentMethod'], PaymentMethodAPI> = {
     Zelle: 'ZELLE',
     Transferencia: 'TRANSFER',
+    'Pago Móvil': 'PAGO_MOVIL',
     Efectivo: 'CASH'
   };
   return mapping[method] || 'CASH';

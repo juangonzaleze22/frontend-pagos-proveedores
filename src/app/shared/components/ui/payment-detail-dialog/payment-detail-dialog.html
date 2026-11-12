@@ -112,6 +112,11 @@
                       Titular: {{ paymentData.destinationAccount.holderName }}
                     </p>
                   }
+                  @if (paymentData.destinationAccount.holderId) {
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                      CI: {{ paymentData.destinationAccount.holderId }}
+                    </p>
+                  }
                 </div>
               </div>
             }

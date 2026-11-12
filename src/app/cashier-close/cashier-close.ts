@@ -78,6 +78,7 @@ export class CashierClose implements OnInit {
     { label: 'Todos los métodos', value: null },
     { label: 'Zelle', value: 'ZELLE' },
     { label: 'Transferencia', value: 'TRANSFER' },
+    { label: 'Pago Móvil', value: 'PAGO_MOVIL' },
     { label: 'Efectivo', value: 'CASH' }
   ];
 
@@ -198,7 +199,7 @@ export class CashierClose implements OnInit {
 
     const method = this.selectedPaymentMethod();
     if (method) {
-      params.paymentMethod = method as 'ZELLE' | 'TRANSFER' | 'CASH';
+      params.paymentMethod = method as 'ZELLE' | 'TRANSFER' | 'PAGO_MOVIL' | 'CASH';
     }
 
     params.includeDeleted = this.includeDeleted();
@@ -271,6 +272,7 @@ export class CashierClose implements OnInit {
     const labels: Record<string, string> = {
       'Zelle': 'Zelle',
       'Transferencia': 'Transferencia',
+      'Pago Móvil': 'Pago Móvil',
       'Efectivo': 'Efectivo'
     };
     return labels[method] || method;
@@ -280,6 +282,7 @@ export class CashierClose implements OnInit {
     const icons: Record<string, string> = {
       'ZELLE': 'pi pi-dollar',
       'TRANSFER': 'pi pi-building-columns',
+      'PAGO_MOVIL': 'pi pi-mobile',
       'CASH': 'pi pi-money-bill'
     };
     return icons[method] || 'pi pi-money-bill';

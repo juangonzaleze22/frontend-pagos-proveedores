@@ -127,7 +127,7 @@
                     }
                   </div>
                   <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Cédula / RIF</label>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">CI / RIF</label>
                     <input type="text" pInputText formControlName="pagoMovilCedula" placeholder="Ej. V-12345678" class="w-full" />
                     @if (providerForm.get('pagoMovilCedula')?.invalid && providerForm.get('pagoMovilCedula')?.touched) {
                       <small class="text-red-600">Requerido</small>
@@ -193,7 +193,7 @@
                     }
                   </div>
                   <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Cédula / RIF</label>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">CI / RIF</label>
                     <input type="text" pInputText formControlName="transferenciaCedula" placeholder="Opcional" class="w-full" />
                   </div>
                   <div>
@@ -307,6 +307,23 @@
                 <small class="text-red-600">El monto es requerido</small>
               }
             </div>
+
+            <!-- Facturas de la deuda inicial -->
+            @if ((providerForm.get('deudaInicial')?.value || 0) > 0) {
+              <div class="mt-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Factura(s) de la deuda inicial
+                </label>
+                <app-file-upload
+                  #invoiceUpload
+                  accept="image/*,.pdf"
+                  [multiple]="true"
+                  [maxFiles]="2"
+                  chooseLabel="Subir factura"
+                  hint="PNG, JPG o PDF hasta 5MB (máximo 2 archivos)"
+                  (fileSelect)="onInvoiceSelect($event)" />
+              </div>
+            }
           </div>
           }
 

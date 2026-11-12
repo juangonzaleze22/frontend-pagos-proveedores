@@ -319,6 +319,47 @@ export class LocateProvider {
     return account.accountNumber || '';
   }
 
+  buildAccountCopyText(account: SupplierPaymentAccount): string {
+    const lines: string[] = [this.getAccountTypeLabel(account.type)];
+    if (account.bank) lines.push(`Banco: ${account.bank}`);
+
+    if (account.type === 'ZELLE') {
+      const email = account.email || account.accountNumber;
+      if (email) lines.push(`Email/ID: ${email}`);
+    } else if (account.type === 'PAGO_MOVIL') {
+      const phone = account.phone || account.accountNumber;
+      if (phone) lines.push(`Teléfono: ${phone}`);
+      if (account.holderId) lines.push(`CI/RIF: ${account.holderId}`);
+    } else {
+      if (account.accountNumber) lines.push(`Cuenta: ${account.accountNumber}`);
+      if (account.holderId) lines.push(`CI/RIF: ${account.holderId}`);
+    }
+
+    if (account.holderName) lines.push(`Titular: ${account.holderName}`);
+    return lines.join('\n');
+  }
+
+  copyAccountData(account: SupplierPaymentAccount): void {
+    const text = this.buildAccountCopyText(account);
+    if (!text || !navigator.clipboard) {
+      return;
+    }
+    navigator.clipboard.writeText(text).then(() => {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Copiado',
+        detail: 'Todos los datos de la cuenta se copiaron al portapapeles',
+        life: 2000
+      });
+    }).catch(() => {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudieron copiar los datos de la cuenta'
+      });
+    });
+  }
+
   onInvoiceSelect(files: File[]): void {
     this.invoiceFiles = files || [];
   }

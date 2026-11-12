@@ -495,7 +495,7 @@ formData.append('confirmationNumber', data.confirmationNumber);
       totalAmountUsd: 0,
       totalAmountBs: 0,
       providersServed: 0,
-      byPaymentMethod: { ZELLE: { ...z }, TRANSFER: { ...z }, CASH: { ...z } }
+      byPaymentMethod: { ZELLE: { ...z }, TRANSFER: { ...z }, PAGO_MOVIL: { ...z }, CASH: { ...z } }
     };
   }
 
@@ -504,7 +504,7 @@ formData.append('confirmationNumber', data.confirmationNumber);
       return this.emptyCashierSessionSummary();
     }
     const bpm = raw.byPaymentMethod || {};
-    const method = (key: 'ZELLE' | 'TRANSFER' | 'CASH') => ({
+    const method = (key: 'ZELLE' | 'TRANSFER' | 'PAGO_MOVIL' | 'CASH') => ({
       count: Number(bpm[key]?.count) || 0,
       totalUsd: Number(bpm[key]?.totalUsd) || 0
     });
@@ -516,6 +516,7 @@ formData.append('confirmationNumber', data.confirmationNumber);
       byPaymentMethod: {
         ZELLE: method('ZELLE'),
         TRANSFER: method('TRANSFER'),
+        PAGO_MOVIL: method('PAGO_MOVIL'),
         CASH: method('CASH')
       }
     };

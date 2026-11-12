@@ -1,4 +1,4 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, ViewChild } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -6,6 +6,7 @@ import { AppHeader } from '../shared/components/layout/app-header/app-header';
 import { PageContainer } from '../shared/components/layout/page-container/page-container';
 import { AppCard } from '../shared/components/layout/app-card/app-card';
 import { ApiMessageDialog, ApiMessageData } from '../shared/components/ui/api-message-dialog/api-message-dialog';
+import { FileUploadComponent } from '../shared/components/ui/file-upload/file-upload';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -27,6 +28,7 @@ import { AuthContext } from '../contexts/auth.context';
     PageContainer,
     AppCard,
     ApiMessageDialog,
+    FileUploadComponent,
     InputTextModule,
     InputNumberModule,
     DatePickerModule,
@@ -49,6 +51,9 @@ export class RegisterProvider implements OnInit {
   pageTitle = signal<string>('Registro de Proveedores');
   pageSubtitle = signal<string>('Ingrese la información del nuevo proveedor y sus deudas pendientes');
   providerId = signal<number | null>(null);
+  invoiceFiles: File[] = [];
+
+  @ViewChild('invoiceUpload') invoiceUploadComponent?: FileUploadComponent;
 
   constructor(
     private fb: FormBuilder,
@@ -111,6 +116,14 @@ export class RegisterProvider implements OnInit {
         this.providerForm.updateValueAndValidity();
       });
     });
+  }
+
+  onInvoiceSelect(files: File[]): void {
+    this.invoiceFiles = files || [];
+  }
+
+  private getSelectedInvoiceFiles(): File[] {
+    return this.invoiceUploadComponent?.getSelectedFiles() ?? this.invoiceFiles ?? [];
   }
 
   private cleanOptionalValue(value: string | null | undefined): string | null {
@@ -335,7 +348,7 @@ export class RegisterProvider implements OnInit {
 
       const operation = isEdit && providerId
         ? this.supplierService.update(providerId, payload)
-        : this.supplierService.create(payload);
+        : this.supplierService.createWithFiles(payload, this.getSelectedInvoiceFiles());
 
       operation.subscribe({
         next: () => {
@@ -382,8 +395,10 @@ export class RegisterProvider implements OnInit {
               control?.markAsPristine();
             });
             
-            // Resetear fecha de vencimiento
+            // Resetear fecha de vencimiento y facturas
             this.fechaVencimiento.set(null);
+            this.invoiceFiles = [];
+            this.invoiceUploadComponent?.clear();
             
             // Marcar el formulario como no enviado
             this.providerForm.markAsPristine();

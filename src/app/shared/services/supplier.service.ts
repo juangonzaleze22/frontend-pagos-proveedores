@@ -82,6 +82,52 @@ export class SupplierService {
   }
 
   /**
+   * Crea un proveedor enviando datos por FormData (permite adjuntar facturas de la deuda inicial).
+   */
+  createWithFiles(
+    data: {
+      companyName: string;
+      taxId?: string;
+      phone?: string;
+      email?: string;
+      initialDebtAmount?: number;
+      debtDate?: string;
+      creditDays?: number;
+      title?: string;
+      paymentAccounts?: SupplierPaymentAccount[];
+    },
+    invoiceFiles: File[] = []
+  ): Observable<Provider> {
+    const formData = new FormData();
+    formData.append('companyName', data.companyName);
+    if (data.taxId != null && data.taxId !== '') formData.append('taxId', data.taxId);
+    if (data.phone != null && data.phone !== '') formData.append('phone', data.phone);
+    if (data.email != null && data.email !== '') formData.append('email', data.email);
+    if (data.initialDebtAmount != null) formData.append('initialDebtAmount', data.initialDebtAmount.toString());
+    if (data.debtDate) formData.append('debtDate', data.debtDate);
+    if (data.creditDays != null) formData.append('creditDays', data.creditDays.toString());
+    if (data.title) formData.append('title', data.title);
+    if (data.paymentAccounts && data.paymentAccounts.length > 0) {
+      formData.append('paymentAccounts', JSON.stringify(data.paymentAccounts));
+    }
+
+    invoiceFiles.slice(0, 2).forEach((file) => {
+      if (file instanceof File) {
+        formData.append('invoiceFiles', file, file.name);
+      }
+    });
+
+    return this.apiService.postFormData<Provider>('/suppliers', formData).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          return mapProviderFromAPI(response.data);
+        }
+        throw new Error(response.message || 'Error al crear proveedor');
+      })
+    );
+  }
+
+  /**
    * Actualiza un proveedor
    * Nota: El status se calcula automáticamente según totalDebt, no se puede actualizar manualmente
    */
@@ -209,6 +255,7 @@ export class SupplierService {
     const mapping: Record<string, Payment['paymentMethod']> = {
       ZELLE: 'Zelle',
       TRANSFER: 'Transferencia',
+      PAGO_MOVIL: 'Pago Móvil',
       CASH: 'Efectivo'
     };
     return mapping[method] || 'Efectivo';

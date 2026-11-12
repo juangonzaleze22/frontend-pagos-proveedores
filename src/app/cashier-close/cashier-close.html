@@ -174,7 +174,7 @@
         <h3 class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4">
           <i class="pi pi-wallet mr-2 text-primary"></i>Por Método de Pago
         </h3>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <!-- Zelle -->
           <div class="flex items-center justify-between p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30">
             <div class="flex items-center gap-3">
@@ -204,6 +204,22 @@
             </div>
             <span class="font-semibold text-purple-700 dark:text-purple-300">
               {{ formatCurrency(summary()?.byPaymentMethod?.TRANSFER?.totalUsd) }}
+            </span>
+          </div>
+
+          <!-- Pago Móvil -->
+          <div class="flex items-center justify-between p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-800/50 flex items-center justify-center">
+                <i class="pi pi-mobile text-amber-600 dark:text-amber-400 text-sm"></i>
+              </div>
+              <div>
+                <p class="font-medium text-gray-900 dark:text-white text-sm">Pago Móvil</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ summary()?.byPaymentMethod?.PAGO_MOVIL?.count || 0 }} pagos</p>
+              </div>
+            </div>
+            <span class="font-semibold text-amber-700 dark:text-amber-300">
+              {{ formatCurrency(summary()?.byPaymentMethod?.PAGO_MOVIL?.totalUsd) }}
             </span>
           </div>
 
@@ -294,7 +310,7 @@
             <td>
               <div class="flex flex-col">
                 <span class="inline-flex items-center gap-1.5 text-sm">
-                  <i [class]="getPaymentMethodIcon(payment.paymentMethod === 'Zelle' ? 'ZELLE' : payment.paymentMethod === 'Transferencia' ? 'TRANSFER' : 'CASH')"
+                  <i [class]="getPaymentMethodIcon(payment.paymentMethod === 'Zelle' ? 'ZELLE' : payment.paymentMethod === 'Transferencia' ? 'TRANSFER' : payment.paymentMethod === 'Pago Móvil' ? 'PAGO_MOVIL' : 'CASH')"
                      class="text-xs"></i>
                   {{ getPaymentMethodLabel(payment.paymentMethod) }}
                 </span>

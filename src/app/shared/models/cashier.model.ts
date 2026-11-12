@@ -21,6 +21,7 @@ export interface CashierSessionSummary {
   byPaymentMethod: {
     ZELLE: CashierPaymentMethodSummary;
     TRANSFER: CashierPaymentMethodSummary;
+    PAGO_MOVIL: CashierPaymentMethodSummary;
     CASH: CashierPaymentMethodSummary;
   };
 }
@@ -42,6 +43,6 @@ export interface CashierPaymentsParams {
   limit?: number;
   startDate?: string;
   endDate?: string;
-  paymentMethod?: 'ZELLE' | 'TRANSFER' | 'CASH';
+  paymentMethod?: 'ZELLE' | 'TRANSFER' | 'PAGO_MOVIL' | 'CASH';
   includeDeleted?: boolean;
 }

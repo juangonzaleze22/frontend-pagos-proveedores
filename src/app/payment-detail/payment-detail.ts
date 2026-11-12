@@ -122,6 +122,7 @@ export class PaymentDetail implements OnInit {
     const iconMap: Record<string, string> = {
       'Zelle': 'pi pi-wallet',
       'Transferencia': 'pi pi-credit-card',
+      'Pago Móvil': 'pi pi-mobile',
       'Efectivo': 'pi pi-money-bill'
     };
     return iconMap[method] || 'pi pi-circle';

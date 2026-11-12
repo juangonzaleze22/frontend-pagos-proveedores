@@ -569,6 +569,7 @@ export class PaymentReport implements OnInit {
     const badges: Record<string, { label: string; severity: string }> = {
       'Zelle': { label: 'Zelle', severity: 'purple' },
       'Transferencia': { label: 'Transferencia', severity: 'blue' },
+      'Pago Móvil': { label: 'Pago Móvil', severity: 'warn' },
       'Efectivo': { label: 'Efectivo', severity: 'green' },
       'Otro': { label: 'Otro', severity: 'secondary' }
     };
