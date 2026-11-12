@@ -133,6 +133,11 @@ export class RegisterPayment implements OnInit {
     return this.getExpectedAccountType() === account.type;
   }
 
+  getExpectedAccountTypeLabel(): string {
+    const type = this.getExpectedAccountType();
+    return type ? this.getAccountTypeLabel(type) : '';
+  }
+
   getPaymentAccountOptions(): Array<SupplierPaymentAccount & { label: string }> {
     const type = this.getExpectedAccountType();
     if (!type) {
