@@ -21,7 +21,7 @@
           Buscar Distribuidor
         </label>
         <app-supplier-autocomplete
-          placeholder="Ej: Nombre de la empresa o Id Zelle"
+          placeholder="Ej: Nombre de la empresa o RIF"
           [suggestions]="supplierSuggestions"
           [loading]="searchLoading"
           (search)="onSearch($event)"
@@ -29,7 +29,7 @@
         </app-supplier-autocomplete>
         <p class="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
           <i class="pi pi-info-circle text-sm"></i>
-          Ingrese el nombre de la empresa o el Id Zelle para buscar.
+          Ingrese el nombre de la empresa o el RIF para buscar.
         </p>
       </div>
     </app-app-card>
@@ -62,13 +62,13 @@
               </div>
             </div>
 
-            <!-- Id Zelle -->
+            <!-- RIF -->
             <div class="flex items-start gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
               <div class="p-3 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg">
                 <i class="pi pi-id-card text-2xl"></i>
               </div>
               <div>
-                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Id Zelle</p>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">RIF</p>
                 <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">
                   {{ selectedSupplier()!.taxId || 'N/A' }}
                 </p>

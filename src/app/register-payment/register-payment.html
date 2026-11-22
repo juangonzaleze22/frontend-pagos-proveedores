@@ -110,13 +110,14 @@
             </div>
           </div>
 
-          <!-- Correo distribuidor (Zelle) - se completa al seleccionar proveedor -->
+          <!-- Correo del distribuidor - información de la empresa (se completa al seleccionar un proveedor) -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="correoEmisor">
-              Correo distribuidor (Zelle) <span class="text-red-500">*</span>
+              Correo del distribuidor
+              <span class="text-xs text-gray-500 dark:text-gray-400 font-normal ml-1">(Información de la empresa)</span>
             </label>
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">
-              Se completa al seleccionar un proveedor.
+              Se completa al seleccionar un proveedor. No está asociado a un método de pago.
             </p>
             <p-iconfield iconPosition="left" class="w-full">
               <p-inputicon>
@@ -131,11 +132,6 @@
                 class="w-full"
                 readonly />
             </p-iconfield>
-            @if (paymentForm.get('correoEmisor')?.invalid && paymentForm.get('correoEmisor')?.touched) {
-              @if (paymentForm.get('correoEmisor')?.errors?.['required']) {
-                <small class="text-red-600">Este campo es requerido</small>
-              }
-            }
           </div>
 
           <!-- Método de Pago y Moneda -->
@@ -168,8 +164,18 @@
                 ]"
                 optionLabel="label"
                 optionValue="value"
+                [disabled]="isCurrencyLocked()"
                 (onChange)="onCurrencyChange($event)"
                 styleClass="w-full" />
+              @if (paymentForm.get('metodoPago')?.value === 'Pago Móvil') {
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Pago Móvil solo se registra en bolívares (BS).
+                </p>
+              } @else if (paymentForm.get('metodoPago')?.value === 'Zelle') {
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Zelle solo se registra en dólares (USD).
+                </p>
+              }
             </div>
           </div>
 

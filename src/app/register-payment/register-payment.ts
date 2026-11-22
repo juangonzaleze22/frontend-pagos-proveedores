@@ -82,6 +82,25 @@ export class RegisterPayment implements OnInit {
   // Signal para rastrear el estado del switch pagoEnBolivares
   pagoEnBolivaresSignal = signal<boolean>(false);
 
+  // Signal para rastrear el método de pago seleccionado
+  metodoPagoSignal = signal<string>('Zelle');
+
+  /**
+   * Moneda forzada por el método de pago:
+   * - Zelle → solo USD (false)
+   * - Pago Móvil → solo BS (true)
+   * - Otros → el usuario elige libremente (null)
+   */
+  forcedCurrency = computed<boolean | null>(() => {
+    const method = this.metodoPagoSignal();
+    if (method === 'Zelle') return false;
+    if (method === 'Pago Móvil') return true;
+    return null;
+  });
+
+  /** Indica si el selector de moneda debe bloquearse (método con moneda fija). */
+  isCurrencyLocked = computed(() => this.forcedCurrency() !== null);
+
   // Manejo de excedente: siempre se aplica como saldo a favor (CREDIT)
   private currentMonto = signal<number>(0);
   private currentDebtId = signal<number | null>(null);
@@ -98,14 +117,9 @@ export class RegisterPayment implements OnInit {
     return 0;
   });
 
-  // Computed signal para filtrar métodos de pago según el switch bs/usd
-  filteredPaymentMethods = computed(() => {
-    const pagoEnBolivares = this.pagoEnBolivaresSignal();
-    if (pagoEnBolivares) {
-      return this.paymentMethods.filter(method => method.value !== 'Zelle');
-    }
-    return this.paymentMethods;
-  });
+  // Todos los métodos disponibles: al elegir uno con moneda fija (Zelle/Pago Móvil)
+  // la moneda se ajusta automáticamente y el selector se bloquea.
+  filteredPaymentMethods = computed(() => this.paymentMethods);
 
   /**
    * Cuentas del proveedor compatibles con el método de pago seleccionado.
@@ -265,7 +279,8 @@ export class RegisterPayment implements OnInit {
   ) {
     this.paymentForm = this.fb.group({
       emisor: ['', [Validators.required]],
-      correoEmisor: ['', [Validators.required]],
+      // Información de la empresa (se completa según el proveedor); no es obligatorio
+      correoEmisor: [''],
       numeroConfirmacion: ['', [Validators.required]],
       monto: ['', [Validators.required, Validators.min(0.01)]],
       fechaEnvio: [new Date(), [Validators.required]],
@@ -372,8 +387,15 @@ export class RegisterPayment implements OnInit {
         nota: payment.nota || ''
       });
 
+      // Sincronizar el método y respetar la moneda fija del método
+      this.metodoPagoSignal.set(payment.paymentMethod || 'Zelle');
+      const forced = this.forcedCurrency();
+      if (forced !== null && pagoEnBolivares !== forced) {
+        this.paymentForm.patchValue({ pagoEnBolivares: forced });
+      }
+
       // Actualizar el signal
-      this.pagoEnBolivaresSignal.set(pagoEnBolivares);
+      this.pagoEnBolivaresSignal.set(forced ?? pagoEnBolivares);
 
       // Actualizar validación del monto
       this.paymentForm.get('monto')?.updateValueAndValidity();
@@ -717,6 +739,8 @@ export class RegisterPayment implements OnInit {
    */
   private setupPaymentMethodReactiveLogic() {
     this.paymentForm.get('metodoPago')?.valueChanges.subscribe((metodoPago: string) => {
+      this.metodoPagoSignal.set(metodoPago);
+
       const numeroConfirmacionControl = this.paymentForm.get('numeroConfirmacion');
       
       if (metodoPago === 'Efectivo') {
@@ -728,6 +752,12 @@ export class RegisterPayment implements OnInit {
         // Si no es efectivo, agregar validación requerida
         numeroConfirmacionControl?.setValidators([Validators.required]);
         numeroConfirmacionControl?.updateValueAndValidity();
+      }
+
+      // Métodos con moneda fija: Zelle solo USD y Pago Móvil solo BS
+      const forced = this.forcedCurrency();
+      if (forced !== null && this.paymentForm.get('pagoEnBolivares')?.value !== forced) {
+        this.paymentForm.patchValue({ pagoEnBolivares: forced });
       }
 
       this.syncDestinationAccount();
@@ -743,9 +773,9 @@ export class RegisterPayment implements OnInit {
       // Actualizar el signal
       this.pagoEnBolivaresSignal.set(pagoEnBolivares);
 
+      const metodoPago = this.paymentForm.get('metodoPago')?.value;
       if (pagoEnBolivares) {
-        // Si se activa el switch y el método de pago es Zelle, limpiarlo
-        const metodoPago = this.paymentForm.get('metodoPago')?.value;
+        // Zelle no existe en bolívares: si estaba seleccionado, limpiarlo
         if (metodoPago === 'Zelle') {
           this.paymentForm.patchValue({ metodoPago: '' });
         }
@@ -756,6 +786,11 @@ export class RegisterPayment implements OnInit {
         this.paymentForm.get('monto')?.clearValidators();
         this.paymentForm.get('monto')?.updateValueAndValidity();
       } else {
+        // Pago Móvil no existe en dólares: si estaba seleccionado, limpiarlo
+        if (metodoPago === 'Pago Móvil') {
+          this.paymentForm.patchValue({ metodoPago: '' });
+        }
+
         // Si se desactiva el switch, restaurar validaciones normales
         this.paymentForm.get('tasaDolar')?.clearValidators();
         this.paymentForm.get('montoBolivares')?.clearValidators();

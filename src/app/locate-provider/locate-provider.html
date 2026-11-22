@@ -19,7 +19,7 @@
           Buscar Distribuidor
         </label>
         <app-supplier-autocomplete
-          placeholder="Nombre o Id Zelle"
+          placeholder="Nombre o RIF"
           [suggestions]="supplierSuggestions"
           [loading]="searchLoading"
           (search)="onSearch($event)"
@@ -79,7 +79,7 @@
             @if (provider!.taxId) {
             <div>
               <label class="block text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5 sm:mb-1">
-                Id Zelle
+                RIF
               </label>
               <div class="text-base sm:text-lg text-slate-800 dark:text-slate-200 font-medium">
                 {{ provider!.taxId }}
